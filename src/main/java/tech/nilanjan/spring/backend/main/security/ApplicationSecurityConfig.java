@@ -1,65 +1,89 @@
 package tech.nilanjan.spring.backend.main.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import tech.nilanjan.spring.backend.main.auth.ApplicationUserDetailsService;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtAlgorithm;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtConfig;
-import tech.nilanjan.spring.backend.main.security.jwt.JwtEmailAndPasswordAuthenticationFilter;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtTokenVerifier;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 @Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ApplicationSecurityConfig
         extends WebSecurityConfigurerAdapter {
 
     private final JwtConfig jwtConfig;
     private final JwtAlgorithm jwtAlgorithm;
-    private final PasswordEncoder passwordEncoder;
     private final ApplicationUserDetailsService applicationUserDetailsService;
 
     @Autowired
     public ApplicationSecurityConfig(
             JwtConfig jwtConfig,
             JwtAlgorithm jwtAlgorithm,
-            PasswordEncoder passwordEncoder,
             ApplicationUserDetailsService applicationUserDetailsService
     ) {
         this.jwtConfig = jwtConfig;
         this.jwtAlgorithm = jwtAlgorithm;
-        this.passwordEncoder = passwordEncoder;
         this.applicationUserDetailsService = applicationUserDetailsService;
     }
 
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        http.csrf().disable()
+                .httpBasic().disable()
+                .cors()
                 .and()
-                .addFilter(new JwtEmailAndPasswordAuthenticationFilter(authenticationManager(), jwtConfig, jwtAlgorithm))
-                .addFilterAfter(new JwtTokenVerifier(jwtConfig, jwtAlgorithm), JwtEmailAndPasswordAuthenticationFilter.class)
-                .authorizeRequests()
+                .authorizeHttpRequests()
                 .antMatchers("/v1/auth/**").permitAll()
                 .anyRequest()
-                .authenticated();
+                .authenticated()
+                .and()
+                .userDetailsService(applicationUserDetailsService)
+                .exceptionHandling()
+                    .accessDeniedHandler(
+                            (request, response, accessDeniedException) -> {
+                                Map<String, String> result = new HashMap<>();
+                                result.put("message", "You are unauthorized to access the resource");
+
+                                response.setStatus(401);
+                                response.setHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                                new ObjectMapper().writeValue(response.getOutputStream(), result);
+                            }
+                    )
+                    .authenticationEntryPoint(
+                        (request, response, authenticationException) -> {
+                            Map<String, String> result = new HashMap<>();
+                            result.put("message", "Authentication failed due to bad credentials");
+
+                            response.setStatus(400);
+                            response.setHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                            new ObjectMapper().writeValue(response.getOutputStream(), result);
+                        }
+                    )
+
+                .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        http.addFilterBefore(new JwtTokenVerifier(jwtConfig, jwtAlgorithm), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(daoAuthenticationProvider());
-    }
-
-    public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder);
-        provider.setUserDetailsService(applicationUserDetailsService);
-        return provider;
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
     }
 }
