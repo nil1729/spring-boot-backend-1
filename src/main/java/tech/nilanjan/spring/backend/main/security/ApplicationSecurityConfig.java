@@ -11,10 +11,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import tech.nilanjan.spring.backend.main.auth.ApplicationUserDetailsService;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtAlgorithm;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtConfig;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtTokenVerifier;
+import tech.nilanjan.spring.backend.main.service.UserService;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,16 +31,22 @@ public class ApplicationSecurityConfig
     private final JwtConfig jwtConfig;
     private final JwtAlgorithm jwtAlgorithm;
     private final ApplicationUserDetailsService applicationUserDetailsService;
+    private final FilterChainExceptionHandler filterChainExceptionHandler;
+    private final UserService userService;
 
     @Autowired
     public ApplicationSecurityConfig(
             JwtConfig jwtConfig,
             JwtAlgorithm jwtAlgorithm,
-            ApplicationUserDetailsService applicationUserDetailsService
+            ApplicationUserDetailsService applicationUserDetailsService,
+            FilterChainExceptionHandler filterChainExceptionHandler,
+            UserService userService
     ) {
         this.jwtConfig = jwtConfig;
         this.jwtAlgorithm = jwtAlgorithm;
         this.applicationUserDetailsService = applicationUserDetailsService;
+        this.filterChainExceptionHandler = filterChainExceptionHandler;
+        this.userService = userService;
     }
 
 
@@ -74,11 +83,11 @@ public class ApplicationSecurityConfig
                             new ObjectMapper().writeValue(response.getOutputStream(), result);
                         }
                     )
-
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
-        http.addFilterBefore(new JwtTokenVerifier(jwtConfig, jwtAlgorithm), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(filterChainExceptionHandler, LogoutFilter.class);
+        http.addFilterBefore(new JwtTokenVerifier(jwtConfig, jwtAlgorithm, userService), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override

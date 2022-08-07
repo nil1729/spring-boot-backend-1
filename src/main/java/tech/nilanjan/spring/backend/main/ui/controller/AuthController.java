@@ -1,7 +1,9 @@
 package tech.nilanjan.spring.backend.main.ui.controller;
 
+import com.google.common.base.Strings;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,10 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import tech.nilanjan.spring.backend.main.exceptions.UserServiceException;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtUtil;
 import tech.nilanjan.spring.backend.main.service.UserService;
 import tech.nilanjan.spring.backend.main.shared.dto.UserDto;
 import tech.nilanjan.spring.backend.main.ui.model.request.UserRequestDetails;
+import tech.nilanjan.spring.backend.main.ui.model.response.constant.ErrorMessages;
 import tech.nilanjan.spring.backend.main.ui.model.response.UserRest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,8 +42,20 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping(path = "sign-up")
+    @PostMapping(
+            path = "sign-up",
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE
+            },
+            consumes = {
+                    MediaType.APPLICATION_JSON_VALUE
+            }
+    )
     public UserRest userSignUp(@RequestBody UserRequestDetails userDetails) {
+        if (Strings.isNullOrEmpty(userDetails.getEmail())) {
+            throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
+        }
+
         UserDto userDto = new UserDto();
         BeanUtils.copyProperties(userDetails, userDto);
 
@@ -51,7 +67,15 @@ public class AuthController {
         return returnValue;
     }
 
-    @PostMapping(path = "sign-in")
+    @PostMapping(
+            path = "sign-in",
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE
+            },
+            consumes = {
+                    MediaType.APPLICATION_JSON_VALUE
+            }
+    )
     public ResponseEntity<Map<String, String>> userSignIn(
             @RequestBody UserRequestDetails userDetails,
             HttpServletRequest request
