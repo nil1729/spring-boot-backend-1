@@ -1,6 +1,7 @@
 package tech.nilanjan.spring.backend.main.shared.dto;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class UserDto implements Serializable {
     private Long id;
@@ -12,6 +13,7 @@ public class UserDto implements Serializable {
     private String password;
     private String emailVerificationToken;
     private Boolean emailVerificationStatus;
+    private List<AddressDto> addresses;
 
     public Long getId() {
         return id;
@@ -83,5 +85,13 @@ public class UserDto implements Serializable {
 
     public void setEmailVerificationStatus(Boolean emailVerificationStatus) {
         this.emailVerificationStatus = emailVerificationStatus;
+    }
+
+    public List<AddressDto> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<AddressDto> addresses) {
+        this.addresses = addresses;
     }
 }

@@ -1,5 +1,6 @@
 package tech.nilanjan.spring.backend.main.service.impl;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -8,14 +9,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tech.nilanjan.spring.backend.main.exceptions.UserServiceException;
 import tech.nilanjan.spring.backend.main.io.entity.UserEntity;
-import tech.nilanjan.spring.backend.main.io.utils.UserUtils;
+import tech.nilanjan.spring.backend.main.io.utils.RandomIdUtils;
 import tech.nilanjan.spring.backend.main.repo.UserRepository;
 import tech.nilanjan.spring.backend.main.service.UserService;
+import tech.nilanjan.spring.backend.main.shared.dto.AddressDto;
 import tech.nilanjan.spring.backend.main.shared.dto.UserDto;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.ErrorMessages;
 
 import javax.transaction.Transactional;
-import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,17 +25,17 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserUtils userUtils;
+    private final RandomIdUtils randomIdUtils;
 
     @Autowired
     public UserServiceImpl(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            UserUtils userUtils
+            RandomIdUtils randomIdUtils
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.userUtils = userUtils;
+        this.randomIdUtils = randomIdUtils;
     }
 
     @Override
@@ -42,17 +43,23 @@ public class UserServiceImpl implements UserService {
         Optional<UserEntity> existingUser = userRepository.findUserEntityByEmail(user.getEmail());
         if(existingUser.isPresent()) throw new UserServiceException(ErrorMessages.RECORD_ALREADY_EXISTS.getErrorMessage());
 
-        UserEntity userEntity = new UserEntity();
-        BeanUtils.copyProperties(user, userEntity);
+        for (int i = 0; i < user.getAddresses().size(); i++) {
+            AddressDto addressDto = user.getAddresses().get(i);
+            addressDto.setUserDetails(user);
+            addressDto.setAddressId(randomIdUtils.generateAddressId(30));
+            user.getAddresses().set(i, addressDto);
+        }
+
+        ModelMapper modelMapper = new ModelMapper();
+        UserEntity userEntity = modelMapper.map(user, UserEntity.class);
 
         userEntity.setPassword(passwordEncoder.encode(user.getPassword()));
         userEntity.setEmailVerificationStatus(false);
-        userEntity.setUserId(userUtils.generateUserId(30));
+        userEntity.setUserId(randomIdUtils.generateUserId(30));
 
         UserEntity storedUserDetails = userRepository.save(userEntity);
 
-        UserDto returnValue = new UserDto();
-        BeanUtils.copyProperties(storedUserDetails, returnValue);
+        UserDto returnValue = modelMapper.map(storedUserDetails, UserDto.class);
 
         return returnValue;
     }

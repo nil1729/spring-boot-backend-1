@@ -1,6 +1,8 @@
 package tech.nilanjan.spring.backend.main.ui.controller;
 
 import com.google.common.base.Strings;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -9,24 +11,32 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import tech.nilanjan.spring.backend.main.exceptions.UserServiceException;
+import tech.nilanjan.spring.backend.main.service.AddressService;
 import tech.nilanjan.spring.backend.main.service.UserService;
+import tech.nilanjan.spring.backend.main.shared.dto.AddressDto;
 import tech.nilanjan.spring.backend.main.shared.dto.UserDto;
 import tech.nilanjan.spring.backend.main.ui.model.request.UserRequestDetails;
 import tech.nilanjan.spring.backend.main.ui.model.response.OperationStatusRest;
+import tech.nilanjan.spring.backend.main.ui.model.response.UserAddressRest;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.ErrorMessages;
 import tech.nilanjan.spring.backend.main.ui.model.response.UserRest;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.OperationNames;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.OperationStatus;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @RestController
 @RequestMapping("/v1/profile")
 public class UserProfileController {
     private final UserService userService;
+    private final AddressService addressService;
 
     @Autowired
-    public UserProfileController(UserService userService) {
+    public UserProfileController(UserService userService, AddressService addressService) {
         this.userService = userService;
+        this.addressService = addressService;
     }
 
     @GetMapping(
@@ -90,5 +100,36 @@ public class UserProfileController {
 
         operationStatusRest.setOperationStatus(OperationStatus.SUCCESS.name());
         return ResponseEntity.ok().body(operationStatusRest);
+    }
+
+    @GetMapping(
+            path = "/addresses"
+    )
+    public ResponseEntity<List<UserAddressRest>> getUserAddressList(Authentication authResult) {
+        String userEmail = authResult.getName();
+
+        List<AddressDto> addressDtoList = addressService.getAddressList(userEmail);
+
+        ModelMapper modelMapper = new ModelMapper();
+        List<UserAddressRest> returnValue
+                = modelMapper.map(addressDtoList, new TypeToken<List<UserAddressRest>>() {}.getType());
+
+        return ResponseEntity.ok().body(returnValue);
+    }
+
+    @GetMapping(
+            path = "/addresses/{addressId}"
+    )
+    public ResponseEntity<UserAddressRest> getUserAddressById(
+            Authentication authResult,
+            @PathVariable String addressId
+    ){
+        String userEmail = authResult.getName();
+
+        AddressDto addressDto = addressService.getAddressById(userEmail, addressId);
+
+        UserAddressRest returnValue = new ModelMapper().map(addressDto, UserAddressRest.class);
+
+        return ResponseEntity.ok().body(returnValue);
     }
 }

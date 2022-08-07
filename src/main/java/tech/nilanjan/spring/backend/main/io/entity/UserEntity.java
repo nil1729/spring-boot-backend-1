@@ -1,8 +1,9 @@
 package tech.nilanjan.spring.backend.main.io.entity;
 
 import javax.persistence.*;
+import java.util.List;
 
-@Entity(name = "Users")
+@Entity(name = "User")
 @Table(
         name = "users",
         uniqueConstraints = {
@@ -31,7 +32,8 @@ public class UserEntity {
     @Column(
             length = 30,
             nullable = false,
-            name = "user_id"
+            name = "user_id",
+            updatable = false
     )
     private String userId;
     @Column(
@@ -46,24 +48,34 @@ public class UserEntity {
             name = "last_name"
     )
     private String lastName;
+
     @Column(
             length = 100,
             nullable = false,
             name = "email"
     )
     private String email;
+
     @Column(
             nullable = false,
             name = "password"
     )
     private String password;
+
     @Column(name = "email_verification_token")
     private String emailVerificationToken;
+
     @Column(
             nullable = false,
             name = "email_verification_status"
     )
     private Boolean emailVerificationStatus = false;
+
+    @OneToMany(
+            mappedBy = "userDetails",
+            cascade = {CascadeType.ALL}
+    )
+    private List<AddressEntity> addresses;
 
     public Long getId() {
         return id;
@@ -127,5 +139,13 @@ public class UserEntity {
 
     public void setEmailVerificationStatus(Boolean emailVerificationStatus) {
         this.emailVerificationStatus = emailVerificationStatus;
+    }
+
+    public List<AddressEntity> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<AddressEntity> addresses) {
+        this.addresses = addresses;
     }
 }

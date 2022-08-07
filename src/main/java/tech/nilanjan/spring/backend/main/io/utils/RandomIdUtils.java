@@ -5,11 +5,15 @@ import org.springframework.stereotype.Component;
 import java.util.Random;
 
 @Component
-public class UserUtils {
+public class RandomIdUtils {
     private final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private final Random RANDOM = new Random();
 
     public String generateUserId(int length) {
+        return generateRandomId(length);
+    }
+
+    public String generateAddressId(int length) {
         return generateRandomId(length);
     }
 
