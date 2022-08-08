@@ -5,6 +5,10 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +27,7 @@ import tech.nilanjan.spring.backend.main.ui.model.response.UserRest;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.OperationNames;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.OperationStatus;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -45,14 +49,28 @@ public class UserProfileController {
             }
     )
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<UserRest> getUserProfile(Authentication authResult) {
+    public ResponseEntity<EntityModel<UserRest>> getUserProfile(Authentication authResult) {
         String userEmail = authResult.getName();
         UserDto userDetails = userService.getUserByEmail(userEmail);
 
-        UserRest returnValue = new UserRest();
-        BeanUtils.copyProperties(userDetails, returnValue);
+        UserRest returnValue = new ModelMapper().map(userDetails, UserRest.class);
 
-        return ResponseEntity.ok().body(returnValue);
+        // Links
+        Link selfLink = WebMvcLinkBuilder
+                .linkTo(UserProfileController.class)
+                .withSelfRel();
+        Link addressesLink = WebMvcLinkBuilder
+                .linkTo(
+                        WebMvcLinkBuilder
+                                .methodOn(UserProfileController.class)
+                                .getUserAddressList(authResult)
+                )
+                .withRel("addresses");
+
+
+        return ResponseEntity.ok().body(EntityModel.of(returnValue,
+                Arrays.asList(selfLink, addressesLink)
+        ));
     }
 
     @PutMapping(
@@ -105,7 +123,7 @@ public class UserProfileController {
     @GetMapping(
             path = "/addresses"
     )
-    public ResponseEntity<List<UserAddressRest>> getUserAddressList(Authentication authResult) {
+    public ResponseEntity<CollectionModel<UserAddressRest>> getUserAddressList(Authentication authResult) {
         String userEmail = authResult.getName();
 
         List<AddressDto> addressDtoList = addressService.getAddressList(userEmail);
@@ -114,7 +132,33 @@ public class UserProfileController {
         List<UserAddressRest> returnValue
                 = modelMapper.map(addressDtoList, new TypeToken<List<UserAddressRest>>() {}.getType());
 
-        return ResponseEntity.ok().body(returnValue);
+        for (UserAddressRest addressRest: returnValue) {
+            Link selfLink = WebMvcLinkBuilder
+                    .linkTo(
+                            WebMvcLinkBuilder
+                                    .methodOn(UserProfileController.class)
+                                    .getUserAddressById(authResult, addressRest.getAddressId())
+                    )
+                    .withSelfRel();
+
+            addressRest.add(selfLink);
+        }
+
+        // Links
+        Link profileLink = WebMvcLinkBuilder
+                .linkTo(UserProfileController.class)
+                .withRel("profile");
+        Link selfLink = WebMvcLinkBuilder
+                .linkTo(
+                        WebMvcLinkBuilder
+                                .methodOn(UserProfileController.class)
+                                .getUserAddressList(authResult)
+                )
+                .withSelfRel();
+
+        return ResponseEntity.ok().body(
+                CollectionModel.of(returnValue, Arrays.asList(profileLink, selfLink))
+        );
     }
 
     @GetMapping(
@@ -129,6 +173,22 @@ public class UserProfileController {
         AddressDto addressDto = addressService.getAddressById(userEmail, addressId);
 
         UserAddressRest returnValue = new ModelMapper().map(addressDto, UserAddressRest.class);
+
+        // Links
+        Link profileLink = WebMvcLinkBuilder
+                .linkTo(UserProfileController.class)
+                .withRel("profile");
+        Link addressesLink = WebMvcLinkBuilder
+                .linkTo(UserProfileController.class)
+                .slash("addresses")
+                .withRel("addresses");
+        Link selfLink = WebMvcLinkBuilder
+                .linkTo(UserProfileController.class)
+                .slash("addresses")
+                .slash(addressId)
+                .withSelfRel();
+
+        returnValue.add(profileLink).add(addressesLink).add(selfLink);
 
         return ResponseEntity.ok().body(returnValue);
     }

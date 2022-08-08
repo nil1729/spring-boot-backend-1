@@ -1,6 +1,9 @@
 package tech.nilanjan.spring.backend.main.ui.model.response;
 
-public class UserAddressRest {
+import org.springframework.hateoas.RepresentationModel;
+
+public class UserAddressRest
+        extends RepresentationModel<UserAddressRest> {
     private String addressId;
     private String country;
     private String state;
