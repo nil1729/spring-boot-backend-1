@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,7 +39,11 @@ public class ApiExceptionHandler {
             httpStatus = HttpStatus.BAD_REQUEST;
         } else if (JWTDecodeException.class.equals(exceptionClass)) {
             httpStatus = HttpStatus.UNAUTHORIZED;
-        } else if(AccessDeniedException.class.equals(exceptionClass)) {
+        } else if(
+                AccessDeniedException.class.equals(exceptionClass) ||
+                        InternalAuthenticationServiceException.class.equals(exceptionClass) ||
+                        DisabledException.class.equals(exceptionClass)
+        ) {
             httpStatus = HttpStatus.FORBIDDEN;
         }
 

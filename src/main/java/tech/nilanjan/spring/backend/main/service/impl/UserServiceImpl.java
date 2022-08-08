@@ -9,13 +9,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tech.nilanjan.spring.backend.main.exceptions.UserServiceException;
 import tech.nilanjan.spring.backend.main.io.entity.UserEntity;
-import tech.nilanjan.spring.backend.main.io.utils.RandomIdUtils;
+import tech.nilanjan.spring.backend.main.shared.utils.EmailVerificationUtils;
+import tech.nilanjan.spring.backend.main.shared.utils.RandomIdUtils;
 import tech.nilanjan.spring.backend.main.repo.UserRepository;
 import tech.nilanjan.spring.backend.main.service.UserService;
 import tech.nilanjan.spring.backend.main.shared.dto.AddressDto;
 import tech.nilanjan.spring.backend.main.shared.dto.UserDto;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.ErrorMessages;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,22 +28,27 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RandomIdUtils randomIdUtils;
+    private final EmailVerificationUtils emailVerificationUtils;
 
     @Autowired
     public UserServiceImpl(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            RandomIdUtils randomIdUtils
+            RandomIdUtils randomIdUtils,
+            EmailVerificationUtils emailVerificationUtils
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.randomIdUtils = randomIdUtils;
+        this.emailVerificationUtils = emailVerificationUtils;
     }
 
     @Override
-    public UserDto createUser(UserDto user) {
+    public UserDto createUser(UserDto user, HttpServletRequest request) {
         Optional<UserEntity> existingUser = userRepository.findUserEntityByEmail(user.getEmail());
-        if(existingUser.isPresent()) throw new UserServiceException(ErrorMessages.RECORD_ALREADY_EXISTS.getErrorMessage());
+        if(existingUser.isPresent()) {
+            throw new UserServiceException(ErrorMessages.RECORD_ALREADY_EXISTS.getErrorMessage());
+        }
 
         for (int i = 0; i < user.getAddresses().size(); i++) {
             AddressDto addressDto = user.getAddresses().get(i);
@@ -53,9 +60,13 @@ public class UserServiceImpl implements UserService {
         ModelMapper modelMapper = new ModelMapper();
         UserEntity userEntity = modelMapper.map(user, UserEntity.class);
 
+        String userId = randomIdUtils.generateUserId(30);
         userEntity.setPassword(passwordEncoder.encode(user.getPassword()));
         userEntity.setEmailVerificationStatus(false);
-        userEntity.setUserId(randomIdUtils.generateUserId(30));
+        userEntity.setUserId(userId);
+        userEntity.setEmailVerificationToken(
+                emailVerificationUtils.generateVerificationToken(userId, request)
+        );
 
         UserEntity storedUserDetails = userRepository.save(userEntity);
 
@@ -121,4 +132,22 @@ public class UserServiceImpl implements UserService {
         return returnValue;
     }
 
+    @Override
+    @Transactional
+    public Boolean verifyEmailAddress(String emailVerificationToken) {
+        Optional<UserEntity> userEntity =
+                userRepository.findUserEntityByEmailVerificationToken(emailVerificationToken);
+
+        if(userEntity.isPresent() &&
+                !emailVerificationUtils.checkIsTokenExpired(emailVerificationToken)) {
+
+            userEntity.get().setEmailVerificationStatus(true);
+            userEntity.get().setEmailVerificationToken(null);
+            userRepository.save(userEntity.get());
+
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -11,6 +11,8 @@ public class JwtConfig {
     private String secretKey;
     private String tokenPrefix;
     private Integer tokenExpirationAfterMinutes;
+    private String emailVerificationSecretKey;
+    private Integer emailVerificationTokenExpirationAfterMinutes;
 
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
@@ -22,6 +24,16 @@ public class JwtConfig {
 
     public void setTokenExpirationAfterMinutes(Integer tokenExpirationAfterMinutes) {
         this.tokenExpirationAfterMinutes = tokenExpirationAfterMinutes;
+    }
+
+    public void setEmailVerificationSecretKey(String emailVerificationSecretKey) {
+        this.emailVerificationSecretKey = emailVerificationSecretKey;
+    }
+
+    public void setEmailVerificationTokenExpirationAfterMinutes(
+            Integer emailVerificationTokenExpirationAfterMinutes
+    ) {
+        this.emailVerificationTokenExpirationAfterMinutes = emailVerificationTokenExpirationAfterMinutes;
     }
 
     public String getSecretKey() {
@@ -38,5 +50,13 @@ public class JwtConfig {
 
     public String getAuthorizationHeader() {
         return AUTHORIZATION;
+    }
+
+    public String getEmailVerificationSecretKey() {
+        return emailVerificationSecretKey;
+    }
+
+    public Integer getEmailVerificationTokenExpirationAfterMinutes() {
+        return emailVerificationTokenExpirationAfterMinutes;
     }
 }

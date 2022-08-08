@@ -2,9 +2,12 @@ package tech.nilanjan.spring.backend.main.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
+import tech.nilanjan.spring.backend.main.exceptions.UserServiceException;
 import tech.nilanjan.spring.backend.main.io.entity.UserEntity;
 import tech.nilanjan.spring.backend.main.repo.UserRepository;
+import tech.nilanjan.spring.backend.main.ui.model.response.constant.ErrorMessages;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -27,17 +30,15 @@ public class ApplicationUserDaoImpl implements ApplicationUserDao {
             Set<SimpleGrantedAuthority> grantedAuthorities = new HashSet<>();
             grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-            return Optional.of(
-                    new ApplicationUser(
-                            grantedAuthorities,
-                            userData.get().getPassword(),
-                            userData.get().getEmail(),
-                            true,
-                            true,
-                            true,
-                            true
-                    )
-            );
+            return Optional.of(new ApplicationUser(
+                    grantedAuthorities,
+                    userData.get().getPassword(),
+                    userData.get().getEmail(),
+                    true,
+                    true,
+                    true,
+                    userData.get().getEmailVerificationStatus()
+            ));
         }
 
         return Optional.empty();

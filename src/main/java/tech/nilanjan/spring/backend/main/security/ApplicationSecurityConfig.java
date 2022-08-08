@@ -13,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import tech.nilanjan.spring.backend.main.auth.ApplicationUserDetailsService;
+import tech.nilanjan.spring.backend.main.security.constant.PublicRoutes;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtAlgorithm;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtConfig;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtTokenVerifier;
@@ -57,7 +58,14 @@ public class ApplicationSecurityConfig
                 .cors()
                 .and()
                 .authorizeHttpRequests()
-                .antMatchers("/v1/auth/**").permitAll()
+                .antMatchers(
+                        PublicRoutes.AUTH_ROUTE.getHttpMethod(),
+                        PublicRoutes.AUTH_ROUTE.getRoute()
+                    ).permitAll()
+                .antMatchers(
+                        PublicRoutes.EMAIL_VERIFICATION_ROUTE.getHttpMethod(),
+                        PublicRoutes.EMAIL_VERIFICATION_ROUTE.getRoute()
+                    ).permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()

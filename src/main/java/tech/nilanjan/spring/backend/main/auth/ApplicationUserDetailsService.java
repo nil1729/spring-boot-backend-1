@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import tech.nilanjan.spring.backend.main.exceptions.UserServiceException;
 
 import java.util.Optional;
 
@@ -20,12 +21,12 @@ public class ApplicationUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email)
-            throws UsernameNotFoundException {
+            throws UserServiceException {
 
         return applicationUserDao
                 .selectUserByEmail(email)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException(
+                        new UserServiceException(
                                 String.format("Email address [%s] not registered with us", email)
                         )
                 );

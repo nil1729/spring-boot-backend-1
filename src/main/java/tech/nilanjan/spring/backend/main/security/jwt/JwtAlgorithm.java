@@ -16,4 +16,7 @@ public class JwtAlgorithm {
     public Algorithm getAlgorithm() {
         return Algorithm.HMAC256(jwtConfig.getSecretKey().getBytes());
     }
+    public Algorithm getEmailVerificationAlgorithm() {
+        return Algorithm.HMAC256(jwtConfig.getEmailVerificationSecretKey().getBytes());
+    }
 }

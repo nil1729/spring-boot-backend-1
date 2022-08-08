@@ -1,4 +1,4 @@
-package tech.nilanjan.spring.backend.main.io.utils;
+package tech.nilanjan.spring.backend.main.shared.utils;
 
 import org.springframework.stereotype.Component;
 
