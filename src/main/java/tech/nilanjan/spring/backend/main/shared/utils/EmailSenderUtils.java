@@ -18,6 +18,7 @@ import java.io.IOException;
 @Component
 public class EmailSenderUtils {
     private final String VERIFICATION_EMAIL_SUBJECT = "Verify your Email address";
+    private final String RESET_PASSWORD_SUBJECT = "Reset your password";
     private Mail createMail(
             String destinationEmailAddress,
             String mailSubject,
@@ -62,4 +63,18 @@ public class EmailSenderUtils {
 
         this.sendEmail(mailObject);
     }
+
+    public void sendResetPasswordEmail(
+            String destinationEmailAddress,
+            String resetPasswordToken
+    ) {
+        Mail mailObject = this.createMail(
+                destinationEmailAddress,
+                this.RESET_PASSWORD_SUBJECT,
+                resetPasswordToken
+        );
+
+        this.sendEmail(mailObject);
+    }
+
 }

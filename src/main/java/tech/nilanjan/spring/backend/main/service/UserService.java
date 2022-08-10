@@ -18,4 +18,8 @@ public interface UserService {
     List<UserDto> getUsersList(Integer page, Integer limit);
 
     Boolean verifyEmailAddress(String emailVerificationToken);
+
+    Boolean resetPasswordRequest(String email, HttpServletRequest request);
+
+    Boolean resetPassword(String password, String token);
 }

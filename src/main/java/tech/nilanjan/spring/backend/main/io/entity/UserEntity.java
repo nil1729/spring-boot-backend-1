@@ -62,7 +62,7 @@ public class UserEntity {
     )
     private String password;
 
-    @Column(name = "email_verification_token")
+    @Column(name = "email_verification_token", columnDefinition = "text")
     private String emailVerificationToken;
 
     @Column(

@@ -16,13 +16,11 @@ import tech.nilanjan.spring.backend.main.exceptions.UserServiceException;
 import tech.nilanjan.spring.backend.main.security.jwt.JwtUtil;
 import tech.nilanjan.spring.backend.main.service.UserService;
 import tech.nilanjan.spring.backend.main.shared.dto.UserDto;
-import tech.nilanjan.spring.backend.main.shared.utils.EmailSenderUtils;
 import tech.nilanjan.spring.backend.main.ui.model.request.UserRequestDetails;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.ErrorMessages;
 import tech.nilanjan.spring.backend.main.ui.model.response.UserRest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,19 +30,16 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final EmailSenderUtils emailSenderUtils;
 
     @Autowired
     public AuthController(
             UserService userService,
             AuthenticationManager authenticationManager,
-            JwtUtil jwtUtil,
-            EmailSenderUtils emailSenderUtils
+            JwtUtil jwtUtil
     ) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
-        this.emailSenderUtils = emailSenderUtils;
     }
 
     @PostMapping(
@@ -71,7 +66,6 @@ public class AuthController {
 
         UserRest returnValue = modelMapper.map(createdUser, UserRest.class);
 
-        emailSenderUtils.sendVerificationEmail(createdUser.getEmail(), createdUser.getEmailVerificationToken());
         return ResponseEntity.ok().body(returnValue);
     }
 

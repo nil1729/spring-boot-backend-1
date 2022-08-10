@@ -30,6 +30,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<Object> handleOtherException(Exception ex) {
+        ex.printStackTrace();
+
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         Class<? extends Exception> exceptionClass = ex.getClass();
 

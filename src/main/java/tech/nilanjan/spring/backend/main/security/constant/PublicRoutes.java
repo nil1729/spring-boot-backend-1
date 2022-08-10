@@ -4,7 +4,8 @@ import org.springframework.http.HttpMethod;
 
 public enum PublicRoutes {
     AUTH_ROUTE("/v1/auth/**", HttpMethod.POST),
-    EMAIL_VERIFICATION_ROUTE("/v1/email-verification", HttpMethod.GET);
+    EMAIL_VERIFICATION_ROUTE("/v1/email-verification", HttpMethod.GET),
+    PASSWORD_RESET_REQUEST("/v1/password-reset/**", HttpMethod.POST);
 
     private final String route;
     private final HttpMethod httpMethod;

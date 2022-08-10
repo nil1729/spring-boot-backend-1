@@ -66,6 +66,10 @@ public class ApplicationSecurityConfig
                         PublicRoutes.EMAIL_VERIFICATION_ROUTE.getHttpMethod(),
                         PublicRoutes.EMAIL_VERIFICATION_ROUTE.getRoute()
                     ).permitAll()
+                .antMatchers(
+                        PublicRoutes.PASSWORD_RESET_REQUEST.getHttpMethod(),
+                        PublicRoutes.PASSWORD_RESET_REQUEST.getRoute()
+                    ).permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()
