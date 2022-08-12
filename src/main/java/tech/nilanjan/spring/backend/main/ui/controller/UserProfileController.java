@@ -1,6 +1,8 @@
 package tech.nilanjan.spring.backend.main.ui.controller;
 
 import com.google.common.base.Strings;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
@@ -49,6 +51,15 @@ public class UserProfileController {
             }
     )
     @PreAuthorize("hasRole('ROLE_USER')")
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "authorization",
+                    value = "${application.swagger.authorization-value}",
+                    required = true,
+                    paramType = "header",
+                    dataTypeClass = String.class
+            )
+    })
     public ResponseEntity<EntityModel<UserRest>> getUserProfile(Authentication authResult) {
         String userEmail = authResult.getName();
         UserDto userDetails = userService.getUserByEmail(userEmail);
@@ -82,13 +93,22 @@ public class UserProfileController {
             }
     )
     @PreAuthorize("hasRole('ROLE_USER')")
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "authorization",
+                    value = "${application.swagger.authorization-value}",
+                    required = true,
+                    paramType = "header",
+                    dataTypeClass = String.class
+            )
+    })
     public ResponseEntity<UserRest> updateUserProfile(
             Authentication authResult,
             @RequestBody UserRequestDetails userDetails
     ) {
         String userEmail = authResult.getName();
 
-        if(Strings.isNullOrEmpty(userDetails.getFirstName()) ||
+        if (Strings.isNullOrEmpty(userDetails.getFirstName()) ||
                 Strings.isNullOrEmpty(userDetails.getLastName())) {
             throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
         }
@@ -109,6 +129,15 @@ public class UserProfileController {
                     MediaType.APPLICATION_JSON_VALUE
             }
     )
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "authorization",
+                    value = "${application.swagger.authorization-value}",
+                    required = true,
+                    paramType = "header",
+                    dataTypeClass = String.class
+            )
+    })
     public ResponseEntity<OperationStatusRest> deleteProfile(Authentication authResult) {
         OperationStatusRest operationStatusRest = new OperationStatusRest();
         operationStatusRest.setOperationName(OperationNames.DELETE.name());
@@ -123,6 +152,15 @@ public class UserProfileController {
     @GetMapping(
             path = "/addresses"
     )
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "authorization",
+                    value = "${application.swagger.authorization-value}",
+                    required = true,
+                    paramType = "header",
+                    dataTypeClass = String.class
+            )
+    })
     public ResponseEntity<CollectionModel<UserAddressRest>> getUserAddressList(Authentication authResult) {
         String userEmail = authResult.getName();
 
@@ -130,9 +168,10 @@ public class UserProfileController {
 
         ModelMapper modelMapper = new ModelMapper();
         List<UserAddressRest> returnValue
-                = modelMapper.map(addressDtoList, new TypeToken<List<UserAddressRest>>() {}.getType());
+                = modelMapper.map(addressDtoList, new TypeToken<List<UserAddressRest>>() {
+        }.getType());
 
-        for (UserAddressRest addressRest: returnValue) {
+        for (UserAddressRest addressRest : returnValue) {
             Link selfLink = WebMvcLinkBuilder
                     .linkTo(
                             WebMvcLinkBuilder
@@ -164,10 +203,19 @@ public class UserProfileController {
     @GetMapping(
             path = "/addresses/{addressId}"
     )
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "authorization",
+                    value = "${application.swagger.authorization-value}",
+                    required = true,
+                    paramType = "header",
+                    dataTypeClass = String.class
+            )
+    })
     public ResponseEntity<UserAddressRest> getUserAddressById(
             Authentication authResult,
             @PathVariable String addressId
-    ){
+    ) {
         String userEmail = authResult.getName();
 
         AddressDto addressDto = addressService.getAddressById(userEmail, addressId);

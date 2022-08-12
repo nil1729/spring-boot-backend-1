@@ -61,31 +61,38 @@ public class ApplicationSecurityConfig
                 .antMatchers(
                         PublicRoutes.AUTH_ROUTE.getHttpMethod(),
                         PublicRoutes.AUTH_ROUTE.getRoute()
-                    ).permitAll()
+                ).permitAll()
                 .antMatchers(
                         PublicRoutes.EMAIL_VERIFICATION_ROUTE.getHttpMethod(),
                         PublicRoutes.EMAIL_VERIFICATION_ROUTE.getRoute()
-                    ).permitAll()
+                ).permitAll()
                 .antMatchers(
                         PublicRoutes.PASSWORD_RESET_REQUEST.getHttpMethod(),
                         PublicRoutes.PASSWORD_RESET_REQUEST.getRoute()
-                    ).permitAll()
+                ).permitAll()
+                .antMatchers(
+                        "/v2/api-docs",
+                        "/configuration/**",
+                        "/swagger*/**",
+                        "/webjars/**"
+                )
+                .permitAll()
                 .anyRequest()
                 .authenticated()
                 .and()
                 .userDetailsService(applicationUserDetailsService)
                 .exceptionHandling()
-                    .accessDeniedHandler(
-                            (request, response, accessDeniedException) -> {
-                                Map<String, String> result = new HashMap<>();
-                                result.put("message", "You are unauthorized to access the resource");
+                .accessDeniedHandler(
+                        (request, response, accessDeniedException) -> {
+                            Map<String, String> result = new HashMap<>();
+                            result.put("message", "You are unauthorized to access the resource");
 
-                                response.setStatus(401);
-                                response.setHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                                new ObjectMapper().writeValue(response.getOutputStream(), result);
-                            }
-                    )
-                    .authenticationEntryPoint(
+                            response.setStatus(401);
+                            response.setHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                            new ObjectMapper().writeValue(response.getOutputStream(), result);
+                        }
+                )
+                .authenticationEntryPoint(
                         (request, response, authenticationException) -> {
                             Map<String, String> result = new HashMap<>();
                             result.put("message", "Authentication failed due to bad credentials");
@@ -94,7 +101,7 @@ public class ApplicationSecurityConfig
                             response.setHeader(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                             new ObjectMapper().writeValue(response.getOutputStream(), result);
                         }
-                    )
+                )
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 

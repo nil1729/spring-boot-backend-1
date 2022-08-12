@@ -1,6 +1,7 @@
 package tech.nilanjan.spring.backend.main.ui.controller;
 
 import com.google.common.base.Strings;
+import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -17,12 +18,11 @@ import tech.nilanjan.spring.backend.main.security.jwt.JwtUtil;
 import tech.nilanjan.spring.backend.main.service.UserService;
 import tech.nilanjan.spring.backend.main.shared.dto.UserDto;
 import tech.nilanjan.spring.backend.main.ui.model.request.UserRequestDetails;
+import tech.nilanjan.spring.backend.main.ui.model.response.LoginRest;
 import tech.nilanjan.spring.backend.main.ui.model.response.constant.ErrorMessages;
 import tech.nilanjan.spring.backend.main.ui.model.response.UserRest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/auth")
@@ -51,6 +51,10 @@ public class AuthController {
                     MediaType.APPLICATION_JSON_VALUE
             }
     )
+    @ApiOperation(
+            value = "Sign Up web service endpoint",
+            notes = "This web service endpoints returns registered User Details"
+    )
     public ResponseEntity<UserRest> userSignUp(
             @RequestBody UserRequestDetails userDetails,
             HttpServletRequest request
@@ -78,7 +82,7 @@ public class AuthController {
                     MediaType.APPLICATION_JSON_VALUE
             }
     )
-    public ResponseEntity<Map<String, String>> userSignIn(
+    public ResponseEntity<LoginRest> userSignIn(
             @RequestBody UserRequestDetails userDetails,
             HttpServletRequest request
     ) {
@@ -89,9 +93,8 @@ public class AuthController {
         Authentication authResult = authenticationManager.authenticate(authentication);
 
         String accessToken = jwtUtil.generateAccessToken(authResult, request);
-        Map<String, String> result = new HashMap<>();
-        result.put("access_token", accessToken);
+        LoginRest returnValue = new LoginRest(accessToken);
 
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok().body(returnValue);
     }
 }

@@ -1,5 +1,7 @@
 package tech.nilanjan.spring.backend.main.ui.controller;
 
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -29,6 +31,15 @@ public class UserController {
             }
     )
     @PreAuthorize("hasRole('ROLE_USER')")
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "authorization",
+                    value = "${application.swagger.authorization-value}",
+                    required = true,
+                    paramType = "header",
+                    dataTypeClass = String.class
+            )
+    })
     public ResponseEntity<List<UserRest>> getUsersList(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "limit", defaultValue = "25") Integer limit
